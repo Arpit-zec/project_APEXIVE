@@ -4,6 +4,15 @@ from django.core.exceptions import ValidationError
 
 # Base class to include common fields
 class BaseModel(models.Model):
+    """
+    Abstract base class for models with common fields.
+
+    Fields:
+        user_id (IntegerField): ID of the user who created or modified the record.
+        guid (UUIDField): Unique identifier for the record.
+        platform (IntegerField): Platform ID associated with the record.
+        _modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     user_id = models.IntegerField()
     guid = models.UUIDField(unique=True)
     platform = models.IntegerField()
@@ -14,6 +23,32 @@ class BaseModel(models.Model):
 
 # Aircraft Model
 class Aircraft(BaseModel):
+    """
+    The Aircraft model stores information about different aircraft.
+
+    Fields:
+        make (CharField): Manufacturer of the aircraft.
+        model (CharField): Model of the aircraft.
+        category (IntegerField): Category of the aircraft.
+        aircraft_class (IntegerField): Class of the aircraft.
+        power (IntegerField): Power of the aircraft's engine.
+        seats (IntegerField): Number of seats in the aircraft.
+        active (BooleanField): Indicates if the aircraft is active.
+        reference (CharField): Reference identifier for the aircraft.
+        tailwheel (BooleanField): Indicates if the aircraft has a tailwheel.
+        engyype (IntegerField): Engine type of the aircraft.
+        complex (BooleanField): Indicates if the aircraft is complex.
+        high_perf (BooleanField): Indicates if the aircraft is high performance.
+        aerobatic (BooleanField): Indicates if the aircraft is aerobatic.
+        fnpt (IntegerField): FNPT (Flight Navigation Procedures Trainer) rating.
+        kg5700 (BooleanField): Indicates if the aircraft is KG5700 compliant.
+        rating (CharField): Rating of the aircraft.
+        company (CharField): Company associated with the aircraft.
+        cond_log (IntegerField): Condition log identifier.
+        fav_list (BooleanField): Indicates if the aircraft is in the favorite list.
+        sub_model (CharField): Sub-model of the aircraft.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     make = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     category = models.IntegerField()
@@ -23,6 +58,7 @@ class Aircraft(BaseModel):
     active = models.BooleanField()
     reference = models.CharField(max_length=100)
     tailwheel = models.BooleanField()
+    engyype = models.IntegerField(default=0)
     complex = models.BooleanField()
     high_perf = models.BooleanField()
     aerobatic = models.BooleanField()
@@ -38,10 +74,57 @@ class Aircraft(BaseModel):
     def __str__(self):
         return f"{self.make} {self.model} ({self.reference})"
 
-# Flights Model
+# Flight Model
 class Flight(BaseModel):
-    # aircraft = models.ForeignKey(Aircraft, on_delete=models.CASCADE)
-    aircraft_id = models.TextField(null=True)
+    """
+    The Flight model stores detailed information about flights.
+
+    Fields:
+        aircraft_id (ForeignKey): Reference to the Aircraft model.
+        date (DateField): Date of the flight.
+        from_airport (CharField): Departure airport.
+        to_airport (CharField): Arrival airport.
+        route (TextField): Flight route description.
+        time_out (TimeField): Time of departure.
+        time_off (TimeField): Time of takeoff.
+        time_on (TimeField): Time of landing.
+        time_in (TimeField): Time of arrival.
+        on_duty (TimeField): Duty start time.
+        off_duty (TimeField): Duty end time.
+        total_time (DecimalField): Total flight time.
+        pic (DecimalField): Pilot-in-command time.
+        sic (DecimalField): Second-in-command time.
+        night (DecimalField): Night flying time.
+        solo (DecimalField): Solo flying time.
+        cross_country (DecimalField): Cross-country flying time.
+        nvg (DecimalField): NVG (Night Vision Goggles) time.
+        nvg_ops (DecimalField): NVG operations time.
+        distance (DecimalField): Flight distance.
+        day_takeoffs (IntegerField): Number of daytime takeoffs.
+        day_landings_full_stop (IntegerField): Number of daytime full-stop landings.
+        night_takeoffs (IntegerField): Number of nighttime takeoffs.
+        night_landings_full_stop (IntegerField): Number of nighttime full-stop landings.
+        all_landings (IntegerField): Total number of landings.
+        actual_instrument (DecimalField): Actual instrument time.
+        simulated_instrument (DecimalField): Simulated instrument time.
+        hobbs_start (DecimalField): Hobbs meter start time.
+        hobbs_end (DecimalField): Hobbs meter end time.
+        tach_start (DecimalField): Tachometer start time.
+        tach_end (DecimalField): Tachometer end time.
+        holds (IntegerField): Number of holds.
+        approach (CharField): Approach type.
+        dual_given (DecimalField): Dual instruction given time.
+        simulated_flight (DecimalField): Simulated flight time.
+        ground_training (DecimalField): Ground training time.
+        instructor_name (CharField): Name of the instructor.
+        instructor_comments (TextField): Comments from the instructor.
+        pilot_comments (TextField): Comments from the pilot.
+        flight_review (BooleanField): Indicates if the flight is reviewed.
+        checkride (BooleanField): Indicates if the flight was a checkride.
+        ipc (BooleanField): Indicates if the flight was for IPC (Instrument Proficiency Check).
+        nvg_proficiency (BooleanField): Indicates NVG proficiency.
+    """
+    aircraft_id = models.ForeignKey(Aircraft, on_delete=models.CASCADE, default=1)
     date = models.DateField(null=True)
     from_airport = models.CharField(max_length=100)
     to_airport = models.CharField(max_length=100)
@@ -89,7 +172,20 @@ class Flight(BaseModel):
     def __str__(self):
         return f"Flight on {self.date} from {self.from_airport} to {self.to_airport}"
 
+# ImagePic Model
 class ImagePic(BaseModel):
+    """
+    The ImagePic model stores information about images related to records.
+
+    Fields:
+        file_ext (CharField): File extension of the image.
+        img_code (UUIDField): Unique code for the image.
+        file_name (CharField): Name of the image file.
+        link_code (UUIDField): Code for linking related records.
+        img_upload (BooleanField): Indicates if the image is uploaded.
+        img_download (BooleanField): Indicates if the image is available for download.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     file_ext = models.CharField(max_length=10)
     img_code = models.UUIDField(unique=True)
     file_name = models.CharField(max_length=255)
@@ -101,7 +197,21 @@ class ImagePic(BaseModel):
     def __str__(self):
         return f"ImagePic {self.file_name} ({self.img_code})"
 
+# LimitRules Model
 class LimitRules(BaseModel):
+    """
+    The LimitRules model stores information about various limit rules.
+
+    Fields:
+        limit_code (UUIDField): Unique code for the limit rule.
+        l_from (DateField): Start date of the limit rule.
+        l_to (DateField): End date of the limit rule.
+        l_type (IntegerField): Type of the limit rule.
+        l_zone (IntegerField): Zone associated with the limit rule.
+        l_minutes (IntegerField): Number of minutes associated with the limit rule.
+        l_period_code (IntegerField): Period code for the limit rule.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     limit_code = models.UUIDField(unique=True)
     l_from = models.DateField(null=True)
     l_to = models.DateField(null=True)
@@ -114,7 +224,18 @@ class LimitRules(BaseModel):
     def __str__(self):
         return f"LimitRule {self.limit_code}"
 
+# Query Model
 class Query(BaseModel):
+    """
+    The Query model stores information about predefined queries.
+
+    Fields:
+        name (CharField): Name of the query.
+        mQCode (CharField): Query code.
+        quick_view (BooleanField): Indicates if the query is for quick view.
+        short_name (CharField): Short name for the query.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     name = models.CharField(max_length=255)
     mQCode = models.CharField(max_length=255)
     quick_view = models.BooleanField(default=False)
@@ -123,8 +244,21 @@ class Query(BaseModel):
 
     def __str__(self):
         return self.name
-    
+
+# MyQueryBuild Model
 class MyQueryBuild(BaseModel):
+    """
+    The MyQueryBuild model stores custom query build information.
+
+    Fields:
+        build1 (TextField): Custom field for query build 1.
+        build2 (IntegerField): Custom field for query build 2.
+        build3 (IntegerField): Custom field for query build 3.
+        build4 (CharField): Custom field for query build 4.
+        mQCode (UUIDField): Query code associated with the build.
+        mQBCode (UUIDField): Build code associated with the query.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     build1 = models.TextField()
     build2 = models.IntegerField()
     build3 = models.IntegerField()
@@ -136,7 +270,30 @@ class MyQueryBuild(BaseModel):
     def __str__(self):
         return f"Build for {self.mQCode}"
 
+# Pilot Model
 class Pilot(BaseModel):
+    """
+    The Pilot model stores information about pilots.
+
+    Fields:
+        notes (TextField): Additional notes about the pilot.
+        active (BooleanField): Indicates if the pilot is active.
+        company (CharField): Company associated with the pilot.
+        fav_list (BooleanField): Indicates if the pilot is in the favorite list.
+        user_api (CharField): API key for the user.
+        facebook (CharField): Facebook profile link.
+        linkedin (CharField): LinkedIn profile link.
+        pilot_ref (CharField): Reference identifier for the pilot.
+        pilot_code (UUIDField): Unique code for the pilot.
+        pilot_name (CharField): Name of the pilot.
+        pilot_email (EmailField): Email address of the pilot.
+        pilot_phone (CharField): Phone number of the pilot.
+        certificate (CharField): Certificate associated with the pilot.
+        phone_search (CharField): Phone search identifier.
+        pilot_search (CharField): Pilot search identifier.
+        roster_alias (CharField): Roster alias for the pilot.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     notes = models.TextField(blank=True)
     active = models.BooleanField(default=False)
     company = models.CharField(max_length=255, blank=True)
@@ -157,8 +314,27 @@ class Pilot(BaseModel):
 
     def __str__(self):
         return f"Pilot {self.pilot_name} ({self.pilot_code})"
-    
+
+# Qualification Model
 class Qualification(BaseModel):
+    """
+    The Qualification model stores information about qualifications.
+
+    Fields:
+        q_code (UUIDField): Unique code for the qualification.
+        ref_extra (IntegerField): Reference to extra qualification details.
+        ref_model (CharField): Reference model for the qualification.
+        validity (IntegerField): Validity period of the qualification.
+        date_valid (DateField): Expiration date of the qualification.
+        q_type_code (IntegerField): Type code for the qualification.
+        date_issued (DateField): Date when the qualification was issued.
+        minimum_qty (IntegerField): Minimum quantity required for the qualification.
+        notify_days (IntegerField): Number of days before notification.
+        ref_airfield (UUIDField): Reference to the airfield for the qualification.
+        minimum_period (IntegerField): Minimum period required for the qualification.
+        notify_comment (TextField): Notification comment.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     q_code = models.UUIDField(unique=True)
     ref_extra = models.IntegerField(default=0)
     ref_model = models.CharField(max_length=255, blank=True)
@@ -176,7 +352,18 @@ class Qualification(BaseModel):
     def __str__(self):
         return str(self.q_code)
 
+# SettingConfig Model
 class SettingConfig(BaseModel):
+    """
+    The SettingConfig model stores configuration settings.
+
+    Fields:
+        config_code (IntegerField): Unique code for the configuration setting.
+        name (CharField): Name of the configuration setting.
+        group (CharField): Group associated with the configuration setting.
+        data (TextField): Data related to the configuration setting.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     config_code = models.IntegerField(unique=True)
     name = models.CharField(max_length=255)
     group = models.CharField(max_length=255)
@@ -186,7 +373,30 @@ class SettingConfig(BaseModel):
     def __str__(self):
         return f"{self.name} ({self.config_code})"
 
+# Airfield Model
 class Airfield(BaseModel):
+    """
+    The Airfield model stores information about airfields.
+
+    Fields:
+        af_code (CharField): Unique code for the airfield.
+        af_iata (CharField): IATA code for the airfield.
+        af_icao (CharField): ICAO code for the airfield.
+        af_name (CharField): Name of the airfield.
+        city (CharField): City where the airfield is located.
+        af_cat (IntegerField): Category of the airfield.
+        tz_code (IntegerField): Timezone code of the airfield.
+        latitude (IntegerField): Latitude coordinate of the airfield.
+        longitude (IntegerField): Longitude coordinate of the airfield.
+        show_list (BooleanField): Indicates if the airfield should be shown in a list.
+        user_edit (BooleanField): Indicates if the airfield details can be edited by users.
+        af_country (IntegerField): Country code for the airfield.
+        notes (TextField): Additional notes about the airfield.
+        notes_user (TextField): User-specific notes about the airfield.
+        region_user (IntegerField): Region code associated with the airfield.
+        elevation_ft (IntegerField): Elevation of the airfield in feet.
+        record_modified (IntegerField): Timestamp or integer representing the last modification.
+    """
     af_code = models.CharField(max_length=255, unique=True)
     af_iata = models.CharField(max_length=10, blank=True)
     af_icao = models.CharField(max_length=10, blank=True)

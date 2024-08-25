@@ -79,6 +79,20 @@ The APEXIVE project automates bulk data insertion into a Django application, man
 
    This command processes data files and updates the database.
 
+## Data Export
+
+1. **Export Data to CSV**
+
+   After importing the data, you can export it to a CSV file. The exported file will be saved in the `project_APEXIVE\pilotlog_project\pilotlog\required_resource\` directory.
+
+   Run the export command:
+
+   ```bash
+   python manage.py export_data
+   ```
+
+   This command generates a CSV file based on the data in the database.
+
 ## Testing
 
 Run tests using the following command:

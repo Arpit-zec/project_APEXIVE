@@ -8,6 +8,12 @@ from django.core.management.base import BaseCommand
 from pilotlog.models import *
 
 class Command(BaseCommand):
+    """
+    A Django management command to import data from a JSON file into the database.
+    The command handles multiple types of records, including Aircraft, Flight, ImagePic,
+    LimitRules, MyQuery, and more, by mapping each record type to its corresponding
+    import method.
+    """
 
     help = "Import data from JSON file into the database"
 
@@ -25,6 +31,10 @@ class Command(BaseCommand):
     }
 
     def handle(self, *args, **kwargs):
+        """
+        Entry point for the command. This method reads the JSON file, parses the data,
+        and directs each record to the appropriate import method based on the table name.
+        """
         # Path to the JSON file (modify as needed)
         json_file_path = os.path.join(
             settings.BASE_DIR, 'pilotlog', 'required_resource', 'import - pilotlog_mcc.json'
@@ -50,7 +60,15 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f'No import method for table: {table_name}'))
 
     def get_valid_date(self, value):
-        """Convert date strings to date objects."""
+        """
+        Convert date strings to date objects.
+        
+        Parameters:
+            value (str): The date string to convert.
+        
+        Returns:
+            date: The converted date object, or None if invalid.
+        """
         if isinstance(value, str) and value:
             try:
                 return datetime.strptime(value, '%Y-%m-%d').date()
@@ -63,7 +81,16 @@ class Command(BaseCommand):
         return None
 
     def get_valid_decimal(self, value, default=0):
-        """Convert value to Decimal if valid, otherwise return default."""
+        """
+        Convert value to Decimal if valid, otherwise return the default.
+        
+        Parameters:
+            value (str): The value to convert to Decimal.
+            default (Decimal): The default value to return if conversion fails.
+        
+        Returns:
+            Decimal: The converted Decimal object, or the default value.
+        """
         if value:
             try:
                 return Decimal(value)
@@ -72,7 +99,15 @@ class Command(BaseCommand):
         return Decimal(default)
 
     def get_valid_integer(self, value):
-        """Convert value to Integer if valid, otherwise return None."""
+        """
+        Convert value to Integer if valid, otherwise return None.
+        
+        Parameters:
+            value (str): The value to convert to Integer.
+        
+        Returns:
+            int: The converted Integer object, or None if conversion fails.
+        """
         if value:
             try:
                 return int(value)
@@ -81,7 +116,15 @@ class Command(BaseCommand):
         return None
 
     def get_valid_time(self, value):
-        """Convert time strings to integers."""
+        """
+        Convert time strings to integers.
+        
+        Parameters:
+            value (str): The time string to convert.
+        
+        Returns:
+            int: The converted integer time value, or None if invalid.
+        """
         if isinstance(value, str) and value:
             try:
                 return int(value)
@@ -90,12 +133,29 @@ class Command(BaseCommand):
         return None
 
     def validate_guid(self, guid):
+        """
+        Validate a GUID string to ensure it meets the expected format.
+        
+        Parameters:
+            guid (str): The GUID string to validate.
+        
+        Returns:
+            bool: True if the GUID is valid, False otherwise.
+        """
         if guid and isinstance(guid, str) and len(guid) == 36:  # Example validation
             return True
         return False
 
     def import_aircraft(self, record):
-        """Import Aircraft data."""
+        """
+        Import Aircraft data from the provided record.
+        
+        Parameters:
+            record (dict): A dictionary representing the Aircraft record to import.
+        
+        Returns:
+            None
+        """
         meta = record['meta']
 
         # Create or update the Aircraft record
@@ -125,6 +185,7 @@ class Command(BaseCommand):
                 'fav_list': meta.get('FavList', False),
                 'sub_model': meta.get('SubModel', ''),
                 'record_modified': meta.get('Record_Modified', 0),
+                'engyype' : meta.get('EngType', 0)
             }
         )
 
@@ -148,7 +209,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Updated Aircraft: {aircraft.reference}'))
             
     def import_flights(self, record):
-        """Import Flight data."""
+        """
+        Import Flight data from the provided record.
+        
+        Parameters:
+            record (dict): A dictionary representing the Flight record to import.
+        
+        Returns:
+            None
+        """
         guid = record.get('guid')
         if not self.validate_guid(guid):
             self.stdout.write(self.style.ERROR(f'Invalid or missing GUID: {guid}'))
@@ -163,7 +232,7 @@ class Command(BaseCommand):
                 'user_id': record.get('user_id', 0),
                 'platform': record.get('platform', 0),
                 '_modified': record.get('_modified', 0),
-                'aircraft_id': meta.get('AircraftCode', ''),
+                # 'aircraft_id': meta.get('AircraftCode', ''),
                 'from_airport': meta.get('ArrCode', ''),  # Assuming 'ArrCode' as 'from_airport'
                 'to_airport': meta.get('DepCode', ''),    # Assuming 'DepCode' as 'to_airport'
                 'route': meta.get('Route', ''),
@@ -371,9 +440,14 @@ class Command(BaseCommand):
         )
         
         if created:
-            self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name}'))
+            self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name.encode("ascii", "ignore").decode("ascii")}'))
+            # self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name}'))
+            # print(f'Created new Pilot: {pilot.pilot_name}')
+
         else:
-            self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name}'))
+            self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name.encode("ascii", "ignore").decode("ascii")}'))
+            # self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name}'))
+            # print(f'Updated Pilot: {pilot.pilot_name}')
 
 
     def import_qualification(self, record):
