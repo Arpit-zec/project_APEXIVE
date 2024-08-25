@@ -125,6 +125,7 @@ class Command(BaseCommand):
                 'fav_list': meta.get('FavList', False),
                 'sub_model': meta.get('SubModel', ''),
                 'record_modified': meta.get('Record_Modified', 0),
+                'engyype' : meta.get('EngType', 0)
             }
         )
 
@@ -163,7 +164,7 @@ class Command(BaseCommand):
                 'user_id': record.get('user_id', 0),
                 'platform': record.get('platform', 0),
                 '_modified': record.get('_modified', 0),
-                'aircraft_id': meta.get('AircraftCode', ''),
+                # 'aircraft_id': meta.get('AircraftCode', ''),
                 'from_airport': meta.get('ArrCode', ''),  # Assuming 'ArrCode' as 'from_airport'
                 'to_airport': meta.get('DepCode', ''),    # Assuming 'DepCode' as 'to_airport'
                 'route': meta.get('Route', ''),
@@ -371,9 +372,14 @@ class Command(BaseCommand):
         )
         
         if created:
-            self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name}'))
+            self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name.encode("ascii", "ignore").decode("ascii")}'))
+            # self.stdout.write(self.style.SUCCESS(f'Created new Pilot: {pilot.pilot_name}'))
+            # print(f'Created new Pilot: {pilot.pilot_name}')
+
         else:
-            self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name}'))
+            self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name.encode("ascii", "ignore").decode("ascii")}'))
+            # self.stdout.write(self.style.SUCCESS(f'Updated Pilot: {pilot.pilot_name}'))
+            # print(f'Updated Pilot: {pilot.pilot_name}')
 
 
     def import_qualification(self, record):

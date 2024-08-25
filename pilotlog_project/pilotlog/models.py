@@ -23,6 +23,7 @@ class Aircraft(BaseModel):
     active = models.BooleanField()
     reference = models.CharField(max_length=100)
     tailwheel = models.BooleanField()
+    engyype = models.IntegerField(default=0)
     complex = models.BooleanField()
     high_perf = models.BooleanField()
     aerobatic = models.BooleanField()
@@ -40,8 +41,7 @@ class Aircraft(BaseModel):
 
 # Flights Model
 class Flight(BaseModel):
-    # aircraft = models.ForeignKey(Aircraft, on_delete=models.CASCADE)
-    aircraft_id = models.TextField(null=True)
+    aircraft_id = models.ForeignKey(Aircraft, on_delete=models.CASCADE, default=1)
     date = models.DateField(null=True)
     from_airport = models.CharField(max_length=100)
     to_airport = models.CharField(max_length=100)
