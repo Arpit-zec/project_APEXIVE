@@ -1,76 +1,80 @@
 import os
 import csv
 from django.core.management.base import BaseCommand
-from pilotlog.models import Aircraft, Flight  # Replace 'myapp' with your app name
+from pilotlog.models import Aircraft, Flight 
 
 class Command(BaseCommand):
+    """Management command to export aircraft and flight data to CSV files."""
+    
     help = 'Export aircraft and flight data to CSV files'
 
     def handle(self, *args, **kwargs):
-        file_path = os.path.join('pilotlog_project', 'pilotlog', 'required_resource')
-        file_aircraft = file_path + '\export_aircraft.csv'
-        file_flight = file_path + '\export_flight.csv'
+        """
+        Main function to handle the export process.
+        Defines the file paths for export and calls the respective functions to export data.
+        """        
+        file_path = os.path.join('pilotlog', 'required_resource')
+        file_aircraft = os.path.join(file_path, 'export_aircraft.csv')
+        file_flight = os.path.join(file_path, 'export_flight.csv')
 
         try:
+            # Ensure the directory exists; if not, create it
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+                
+            # Export aircraft and flight data to CSV files
             self.export_aircraft_to_csv(file_aircraft)
             self.export_flights_to_csv(file_flight)
             self.stdout.write(self.style.SUCCESS(f'Successfully exported data to {file_aircraft} and {file_flight}'))
         except Exception as e:
+            # Handle any exceptions that occur during the export process
             self.stdout.write(self.style.ERROR(f'An error occurred: {str(e)}'))
 
     def export_aircraft_to_csv(self, file_path):
         """Exports aircraft data to a CSV file."""
-        
-        # Ensure the directory exists
-        directory = os.path.dirname(file_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
-        # Define the headers
+        # Define the headers for the aircraft CSV file
         headers = [
             "AircraftID", "EquipmentType", "TypeCode", "Year", "Make", "Model", "Category",
             "Class", "GearType", "EngineType", "Complex", "HighPerformance", "Pressurized", "TAA"
         ]
 
-        # Retrieve all aircraft data
+        # Retrieve all aircraft data from the database
         aircrafts = Aircraft.objects.all()
 
-        # Prepare data for CSV
+        # Prepare data rows for the CSV file
         data = []
         for aircraft in aircrafts:
             row = {
                 "AircraftID": aircraft.guid,
-                "EquipmentType": "",  # Placeholder
-                "TypeCode": "",       # Placeholder
+                "EquipmentType": "",  # Placeholder for 'EquipmentType'
+                "TypeCode": "",       # Placeholder for 'TypeCode'
                 "Year": aircraft.record_modified,  # Assuming 'record_modified' maps to 'Year'
                 "Make": aircraft.make,
                 "Model": aircraft.model,
                 "Category": aircraft.category,
                 "Class": aircraft.aircraft_class,
-                "GearType": "",       # Placeholder
-                "EngineType": "",     # Placeholder
+                "GearType": "",       # Placeholder for 'GearType'
+                "EngineType": "",     # Placeholder for 'EngineType'
                 "Complex": 'Yes' if aircraft.complex else 'No',
                 "HighPerformance": 'Yes' if aircraft.high_perf else 'No',
-                "Pressurized": '',    # Placeholder
+                "Pressurized": '',    # Placeholder for 'Pressurized'
                 "TAA": 'Yes' if aircraft.aerobatic else 'No'
             }
             data.append(row)
 
-        # Write data to CSV file
+        # Write the data to the CSV file
         with open(file_path, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=headers)
             writer.writeheader()
             writer.writerows(data)
+        
+        self.stdout.write(self.style.SUCCESS(f'Successfully export aircraft to csv'))
 
     def export_flights_to_csv(self, file_path):
         """Exports flight data to a CSV file."""
-        
-        # Ensure the directory exists
-        directory = os.path.dirname(file_path)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
-        # Define the headers
+        # Define the headers for the flight CSV file
         headers = [
             "Date", "AircraftID", "From", "To", "Route", "TimeOut", "TimeOff", "TimeOn", "TimeIn",
             "OnDuty", "OffDuty", "TotalTime", "PIC", "SIC", "Night", "Solo", "CrossCountry",
@@ -86,15 +90,15 @@ class Command(BaseCommand):
             "PilotComments"
         ]
 
-        # Retrieve all flight data
+        # Retrieve all flight data from the database, with related aircraft data
         flights = Flight.objects.select_related('aircraft_id').all()
 
-        # Open the file for writing
+        # Open the file for writing the flight data
         with open(file_path, mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
             
-            # Writing the data rows
+            # Write each flight record to the CSV file
             for flight in flights:
                 row = [
                     flight.date, flight.aircraft_id.id if flight.aircraft_id else None,
@@ -110,3 +114,5 @@ class Command(BaseCommand):
                     flight.pilot_comments, flight.flight_review, flight.checkride, flight.ipc
                 ]
                 writer.writerow(row)
+
+        self.stdout.write(self.style.SUCCESS(f'Successfully export flight to csv'))
