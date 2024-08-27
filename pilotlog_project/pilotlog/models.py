@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
+import uuid
+from django.utils import timezone
 
 # Base class to include common fields
 class BaseModel(models.Model):
@@ -172,6 +174,40 @@ class Flight(BaseModel):
     def __str__(self):
         return f"Flight on {self.date} from {self.from_airport} to {self.to_airport}"
 
+
+
+# complex method using a custom Manager or QuerySet to filter or aggregate data.
+
+class ImagePicQuerySet(models.QuerySet):
+    def uploaded_and_downloaded(self):
+        return self.filter(img_upload=True, img_download=True)
+
+    def recently_modified(self, days):
+        cutoff_date = timezone.now() - timezone.timedelta(days=days)
+        return self.filter(record_modified__gte=int(cutoff_date.timestamp()))
+    
+    def uploaded_images_by_extension(self, extension, days=30):
+        """
+        Get images that are uploaded and match the specified file extension,
+        modified within the last 'days' days.
+        """
+        cutoff_date = timezone.now() - timezone.timedelta(days=days)
+        return self.filter(
+            img_upload=True,
+            file_ext=extension,
+            record_modified__gte=int(cutoff_date.timestamp())
+        )
+
+class ImagePicManager(models.Manager):
+    def get_queryset(self):
+        return ImagePicQuerySet(self.model, using=self._db)
+
+    def uploaded_and_downloaded_images(self):
+        return self.get_queryset().uploaded_and_downloaded()
+
+    def images_modified_recently(self, days=30):
+        return self.get_queryset().recently_modified(days)
+
 # ImagePic Model
 class ImagePic(BaseModel):
     """
@@ -186,6 +222,7 @@ class ImagePic(BaseModel):
         img_download (BooleanField): Indicates if the image is available for download.
         record_modified (IntegerField): Timestamp or integer representing the last modification.
     """
+    objects = ImagePicManager()  
     file_ext = models.CharField(max_length=10)
     img_code = models.UUIDField(unique=True)
     file_name = models.CharField(max_length=255)
