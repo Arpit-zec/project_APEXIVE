@@ -1,7 +1,6 @@
 import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
-import uuid
 from django.utils import timezone
 
 # Base class to include common fields
